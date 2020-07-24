@@ -2,16 +2,22 @@
 // See LICENSE.txt for license information.
 
 import {Action, ActionFunc, ActionResult, batchActions, DispatchFunc, GetStateFunc} from 'types/actions';
-import {UserProfile, UserStatus, GetFilteredUsersStatsOpts, UsersStats} from 'types/users';
+import {GetFilteredUsersStatsOpts, UserProfile, UsersStats, UserStatus} from 'types/users';
 import {TeamMembership} from 'types/teams';
 import {Client4} from 'client';
 import {General} from '../constants';
-import {UserTypes, TeamTypes, AdminTypes} from 'action_types';
+import {AdminTypes, TeamTypes, UserTypes} from 'action_types';
 import {getAllCustomEmojis} from './emojis';
 import {getClientConfig, setServerVersion} from './general';
-import {getMyTeams, getMyTeamMembers, getMyTeamUnreads} from './teams';
+import {getMyTeamMembers, getMyTeams, getMyTeamUnreads} from './teams';
 import {loadRolesIfNeeded} from './roles';
-import {getUserIdFromChannelName, isDirectChannel, isDirectChannelVisible, isGroupChannel, isGroupChannelVisible} from 'utils/channel_utils';
+import {
+    getUserIdFromChannelName,
+    isDirectChannel,
+    isDirectChannelVisible,
+    isGroupChannel,
+    isGroupChannelVisible
+} from 'utils/channel_utils';
 import {removeUserFromList} from 'utils/user_utils';
 import {isMinimumServerVersion} from 'utils/helpers';
 
@@ -20,7 +26,7 @@ import {getConfig, getServerVersion} from 'selectors/entities/general';
 import {getCurrentUserId, getUsers} from 'selectors/entities/users';
 
 import {logError} from './errors';
-import {bindClientFunc, forceLogoutIfNecessary, debounce} from './helpers';
+import {bindClientFunc, debounce, forceLogoutIfNecessary} from './helpers';
 import {getMyPreferences, makeDirectChannelVisibleIfNecessary, makeGroupMessageVisibleIfNecessary} from './preferences';
 import {Dictionary} from 'types/utilities';
 
@@ -82,6 +88,30 @@ export function login(loginId: string, password: string, mfaToken = '', ldapOnly
 
         try {
             data = await Client4.login(loginId, password, mfaToken, deviceId, ldapOnly);
+        } catch (error) {
+            dispatch(batchActions([
+                {
+                    type: UserTypes.LOGIN_FAILURE,
+                    error,
+                },
+                logError(error),
+            ]));
+            return {error};
+        }
+
+        return completeLogin(data)(dispatch, getState);
+    };
+}
+
+export function loginByOAuthCode(code: string): ActionFunc {
+    return async (dispatch: DispatchFunc, getState: GetStateFunc) => {
+        dispatch({type: UserTypes.LOGIN_REQUEST, data: null});
+
+        const deviceId = getState().entities.general.deviceToken;
+        let data;
+
+        try {
+            data = await Client4.loginByOAuthCode(code, deviceId);
         } catch (error) {
             dispatch(batchActions([
                 {
@@ -735,6 +765,7 @@ const debouncedGetStatusesByIds = debounce(async (dispatch: DispatchFunc, getSta
 }, 20, false, () => {
     ids = [];
 });
+
 export function getStatusesByIdsBatchedDebounced(id: string) {
     ids = [...ids, id];
     return debouncedGetStatusesByIds;
@@ -870,7 +901,7 @@ export function loadProfilesForDirect(): ActionFunc {
                         makeDirectChannelVisibleIfNecessary(otherUserId)(dispatch, getState);
                     }
                 } else if ((member.mention_count > 0 || member.msg_count < channel.total_msg_count) &&
-                           isGroupChannel(channel) && !isGroupChannelVisible(config, myPreferences, channel)) {
+                    isGroupChannel(channel) && !isGroupChannelVisible(config, myPreferences, channel)) {
                     makeGroupMessageVisibleIfNecessary(channel.id)(dispatch, getState);
                 }
             }
@@ -972,7 +1003,10 @@ export function searchProfiles(term: string, options: any = {}): ActionFunc {
             return {error};
         }
 
-        const actions: Action[] = [{type: UserTypes.RECEIVED_PROFILES_LIST, data: removeUserFromList(currentUserId, [...profiles])}];
+        const actions: Action[] = [{
+            type: UserTypes.RECEIVED_PROFILES_LIST,
+            data: removeUserFromList(currentUserId, [...profiles])
+        }];
 
         if (options.in_channel_id) {
             actions.push({
@@ -1020,7 +1054,8 @@ export function searchProfiles(term: string, options: any = {}): ActionFunc {
     };
 }
 
-let statusIntervalId: NodeJS.Timeout|null;
+let statusIntervalId: NodeJS.Timeout | null;
+
 export function startPeriodicStatusUpdates(): ActionFunc {
     return async (dispatch: DispatchFunc, getState: GetStateFunc) => {
         if (statusIntervalId) {
@@ -1146,7 +1181,10 @@ export function updateUserPassword(userId: string, currentPassword: string, newP
 
         const profile = getState().entities.users.profiles[userId];
         if (profile) {
-            dispatch({type: UserTypes.RECEIVED_PROFILE, data: {...profile, last_password_update_at: new Date().getTime()}});
+            dispatch({
+                type: UserTypes.RECEIVED_PROFILE,
+                data: {...profile, last_password_update_at: new Date().getTime()}
+            });
         }
 
         return {data: true};
@@ -1306,7 +1344,8 @@ export function createUserAccessToken(userId: string, description: string): Acti
 
         const actions: Action[] = [{
             type: AdminTypes.RECEIVED_USER_ACCESS_TOKEN,
-            data: {...data,
+            data: {
+                ...data,
                 token: '',
             },
         }];
