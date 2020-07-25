@@ -193,8 +193,8 @@ export function getGroupsNotAssociatedToChannel(channelID: string, q = '', page 
 
 export function getAllGroupsAssociatedToTeam(teamID: string, filterAllowReference: false, includeMemberCount: false): ActionFunc {
     return bindClientFunc({
-        clientFunc: async (param1, param2, param3) => {
-            const result = await Client4.getAllGroupsAssociatedToTeam(param1, param2, param3);
+        clientFunc: async (param1, param2) => {
+            const result = await Client4.getAllGroupsAssociatedToTeam(param1, param2);
             result.teamID = param1;
             return result;
         },
@@ -223,8 +223,8 @@ export function getAllGroupsAssociatedToChannelsInTeam(teamID: string, filterAll
 
 export function getAllGroupsAssociatedToChannel(channelID: string, filterAllowReference: false, includeMemberCount: false): ActionFunc {
     return bindClientFunc({
-        clientFunc: async (param1, param2, param3) => {
-            const result = await Client4.getAllGroupsAssociatedToChannel(param1, param2, param3);
+        clientFunc: async (param1, param2) => {
+            const result = await Client4.getAllGroupsAssociatedToChannel(param1, param2);
             result.channelID = param1;
             return result;
         },
