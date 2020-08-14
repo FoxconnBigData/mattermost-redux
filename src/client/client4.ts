@@ -3072,9 +3072,9 @@ export default class Client4 {
         );
     };
 
-    getGroups = (filterAllowReference = false) => {
+    getGroups = (filterAllowReference = false, page = 0, perPage = PER_PAGE_DEFAULT) => {
         return this.doFetch<Group[]>(
-            `${this.getGroupsRoute()}${buildQueryString({filter_allow_reference: filterAllowReference})}`,
+            `${this.getGroupsRoute()}${buildQueryString({filter_allow_reference: filterAllowReference, page, per_page: perPage})}`,
             {method: 'get'},
         );
     };
@@ -3213,14 +3213,14 @@ export default class Client4 {
     }
 
     getBotsIncludeDeleted = (page = 0, perPage = PER_PAGE_DEFAULT) => {
-        return this.doFetch<Bot>(
+        return this.doFetch<Bot[]>(
             `${this.getBotsRoute()}${buildQueryString({include_deleted: true, page, per_page: perPage})}`,
             {method: 'get'},
         );
     }
 
     getBotsOrphaned = (page = 0, perPage = PER_PAGE_DEFAULT) => {
-        return this.doFetch<Bot>(
+        return this.doFetch<Bot[]>(
             `${this.getBotsRoute()}${buildQueryString({only_orphaned: true, page, per_page: perPage})}`,
             {method: 'get'},
         );
