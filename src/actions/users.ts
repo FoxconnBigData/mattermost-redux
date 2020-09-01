@@ -16,7 +16,7 @@ import {
     isDirectChannel,
     isDirectChannelVisible,
     isGroupChannel,
-    isGroupChannelVisible
+    isGroupChannelVisible,
 } from 'utils/channel_utils';
 import {removeUserFromList} from 'utils/user_utils';
 import {isMinimumServerVersion} from 'utils/helpers';
@@ -1005,7 +1005,7 @@ export function searchProfiles(term: string, options: any = {}): ActionFunc {
 
         const actions: Action[] = [{
             type: UserTypes.RECEIVED_PROFILES_LIST,
-            data: removeUserFromList(currentUserId, [...profiles])
+            data: removeUserFromList(currentUserId, [...profiles]),
         }];
 
         if (options.in_channel_id) {
@@ -1183,7 +1183,7 @@ export function updateUserPassword(userId: string, currentPassword: string, newP
         if (profile) {
             dispatch({
                 type: UserTypes.RECEIVED_PROFILE,
-                data: {...profile, last_password_update_at: new Date().getTime()}
+                data: {...profile, last_password_update_at: new Date().getTime()},
             });
         }
 
