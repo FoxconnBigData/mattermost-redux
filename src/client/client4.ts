@@ -6,6 +6,7 @@ import {ClusterInfo, AnalyticsRow} from 'types/admin';
 import {Audit} from 'types/audits';
 import {UserAutocomplete, AutocompleteSuggestion} from 'types/autocomplete';
 import {Bot, BotPatch} from 'types/bots';
+import {Product, Subscription, CloudCustomer} from 'types/cloud';
 import {ChannelCategory, OrderedChannelCategories} from 'types/channel_categories';
 import {
     Channel,
@@ -89,6 +90,7 @@ import {
     GetFilteredUsersStatsOpts,
 } from 'types/users';
 import {$ID, RelationOneToOne} from 'types/utilities';
+import {ProductNotices} from 'types/product_notices';
 
 import {buildQueryString, isMinimumServerVersion} from 'utils/helpers';
 import {cleanUrlForLogging} from 'utils/sentry';
@@ -381,6 +383,10 @@ export default class Client4 {
 
     getGroupRoute(groupID: string) {
         return `${this.getGroupsRoute()}/${groupID}`;
+    }
+
+    getNoticesRoute() {
+        return `${this.getBaseRoute()}/system/notices`;
     }
 
     getCSRFFromCookie() {
@@ -3311,6 +3317,40 @@ export default class Client4 {
         );
     }
 
+    // Cloud routes
+    getCloudProducts = () => {
+        return this.doFetch<Product[]>(
+            `${this.getBaseRoute()}/cloud/products`, {method: 'get'},
+        );
+    };
+
+    createPaymentMethod = async () => {
+        return this.doFetch(
+            `${this.getBaseRoute()}/cloud/payment`,
+            {method: 'post'},
+        );
+    }
+
+    getCloudCustomer = () => {
+        return this.doFetch<CloudCustomer>(
+            `${this.getBaseRoute()}/cloud/customer`, {method: 'get'},
+        );
+    }
+
+    confirmPaymentMethod = async (stripeSetupIntentID: string) => {
+        return this.doFetch(
+            `${this.getBaseRoute()}/cloud/payment/confirm`,
+            {method: 'post', body: JSON.stringify({stripe_setup_intent_id: stripeSetupIntentID})},
+        );
+    }
+
+    getSubscription = () => {
+        return this.doFetch<Subscription>(
+            `${this.getBaseRoute()}/cloud/subscription`,
+            {method: 'get'},
+        );
+    }
+
     teamMembersMinusGroupMembers = (teamID: string, groupIDs: string[], page: number, perPage: number) => {
         const query = `group_ids=${groupIDs.join(',')}&page=${page}&per_page=${perPage}`;
         return this.doFetch<UsersWithGroupsAndCount>(
@@ -3348,6 +3388,20 @@ export default class Client4 {
             request,
         );
     };
+
+    getInProductNotices = (teamId: string, client: string, clientVersion: string) => {
+        return this.doFetch<ProductNotices>(
+            `${this.getNoticesRoute()}/${teamId}?client=${client}&clientVersion=${clientVersion}`,
+            {method: 'get'},
+        );
+    };
+
+    updateNoticesAsViewed = (noticeIds: string[]) => {
+        return this.doFetch<StatusOK>(
+            `${this.getNoticesRoute()}/view`,
+            {method: 'put', body: JSON.stringify(noticeIds)},
+        );
+    }
 
     // Client Helpers
 

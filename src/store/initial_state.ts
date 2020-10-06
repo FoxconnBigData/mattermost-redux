@@ -30,6 +30,7 @@ const state: GlobalState = {
             profilesInGroup: {},
             statuses: {},
             stats: {},
+            myUserAccessTokens: {},
         },
         teams: {
             currentTeamId: '',
@@ -154,6 +155,7 @@ const state: GlobalState = {
             byId: {},
             orderByTeam: {},
         },
+        cloud: {},
     },
     errors: [],
     requests: {
